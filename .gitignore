@@ -27,3 +27,7 @@ Thumbs.db
 AGENTS.md
 SESSION_LOG.md
 .mcp.json
+
+# Nix
+result
+.direnv

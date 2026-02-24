@@ -5,20 +5,25 @@
 //!
 //! See `docs/ARCHITECTURE.md` for design rationale.
 
-#![warn(clippy::pedantic)]
-#![deny(clippy::unwrap_used)]
-
+/// Block definition and manifest types.
 pub mod block;
+/// Error types for the core crate.
 pub mod error;
+/// Example blocks for testing and documentation.
 pub mod examples;
+/// Execution record and status types.
 pub mod execution;
+/// Identifier types (`BlockId`, `ContentHash`, etc.).
 pub mod id;
+/// Trust score and level types.
 pub mod trust;
 
 pub use block::{Block, BlockManifest, Capability, CognitiveLoad, Dependency, DependencyKind};
 pub use error::CoreError;
 pub use execution::{ExecutionRecord, ExecutionStatus};
-pub use id::{BlockId, ContentHash, ContributorId, DerivationHash, ExecutionId, SnapshotId, UserId};
+pub use id::{
+    BlockId, ContentHash, ContributorId, DerivationHash, ExecutionId, SnapshotId, UserId,
+};
 pub use trust::{SemVer, TrustLevel, TrustScore};
 
 #[cfg(test)]
@@ -129,10 +134,10 @@ mod tests {
 
     #[test]
     fn execution_record_new_sets_correct_fields() {
-        use std::time::Duration;
-        use chrono::Utc;
         use crate::execution::ExecutionStatus;
         use crate::id::{BlockId, ContentHash, UserId};
+        use chrono::Utc;
+        use std::time::Duration;
 
         let block_id = BlockId::new();
         let user_id = UserId::new("test-user");

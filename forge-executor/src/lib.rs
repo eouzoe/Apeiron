@@ -5,9 +5,6 @@
 //!
 //! See `docs/ARCHITECTURE.md` for design rationale.
 
-#![warn(clippy::pedantic)]
-#![deny(clippy::unwrap_used)]
-
 pub mod backend;
 pub mod config;
 pub mod error;
@@ -18,12 +15,12 @@ pub mod runner;
 pub(crate) mod unix_client;
 
 pub use backend::{ExecutionOutput, VmmBackend};
-pub use config::{VmConfig, SnapshotId};
+pub use config::{SnapshotId, VmConfig};
 pub use error::ExecutorError;
 pub use firecracker::FirecrackerBackend;
 pub use handle::VmHandle;
 pub use orchestrator::VmOrchestrator;
-pub use runner::{BlockRunner, compute_hash};
+pub use runner::{compute_hash, BlockRunner};
 
 #[cfg(test)]
 mod tests {
@@ -33,10 +30,8 @@ mod tests {
 
     #[test]
     fn vm_config_default_values_are_sane() {
-        let config = VmConfig::new(
-            PathBuf::from("/tmp/vmlinux"),
-            PathBuf::from("/tmp/rootfs.ext4"),
-        );
+        let config =
+            VmConfig::new(PathBuf::from("/tmp/vmlinux"), PathBuf::from("/tmp/rootfs.ext4"));
         assert_eq!(config.vcpu_count, 1, "default vcpu_count should be 1");
         assert_eq!(config.mem_size_mib, 128, "default mem_size_mib should be 128");
         assert!(
@@ -47,27 +42,15 @@ mod tests {
 
     #[test]
     fn executor_error_display_includes_context() {
-        let err = ExecutorError::BinaryNotFound {
-            path: PathBuf::from("/usr/local/bin/firecracker"),
-        };
+        let err =
+            ExecutorError::BinaryNotFound { path: PathBuf::from("/usr/local/bin/firecracker") };
         let msg = err.to_string();
-        assert!(
-            msg.contains("firecracker"),
-            "error message should mention the binary name"
-        );
-        assert!(
-            msg.contains("/usr/local/bin"),
-            "error message should include the path"
-        );
+        assert!(msg.contains("firecracker"), "error message should mention the binary name");
+        assert!(msg.contains("/usr/local/bin"), "error message should include the path");
 
-        let err2 = ExecutorError::KvmUnavailable {
-            reason: "permission denied".to_owned(),
-        };
+        let err2 = ExecutorError::KvmUnavailable { reason: "permission denied".to_owned() };
         let msg2 = err2.to_string();
-        assert!(
-            msg2.contains("permission denied"),
-            "KVM error should include the reason"
-        );
+        assert!(msg2.contains("permission denied"), "KVM error should include the reason");
     }
 
     #[tokio::test]
@@ -87,7 +70,8 @@ mod tests {
 
         // If KVM is unavailable, we get KvmUnavailable; otherwise BinaryNotFound
         match result {
-            Err(ExecutorError::KvmUnavailable { .. }) | Err(ExecutorError::BinaryNotFound { .. }) => {
+            Err(ExecutorError::KvmUnavailable { .. })
+            | Err(ExecutorError::BinaryNotFound { .. }) => {
                 // expected
             }
             Ok(()) => panic!("health_check should fail with nonexistent binary"),

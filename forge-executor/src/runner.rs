@@ -40,13 +40,13 @@ pub struct BlockRunner<B: VmmBackend> {
 impl<B: VmmBackend> BlockRunner<B> {
     /// Create a new runner with the given backend and VM configuration.
     #[must_use]
-    pub fn new(backend: B, vm_config: VmConfig) -> Self {
+    pub const fn new(backend: B, vm_config: VmConfig) -> Self {
         Self { backend, vm_config, timeout: DEFAULT_TIMEOUT }
     }
 
     /// Create a runner with a custom execution timeout.
     #[must_use]
-    pub fn with_timeout(backend: B, vm_config: VmConfig, timeout: Duration) -> Self {
+    pub const fn with_timeout(backend: B, vm_config: VmConfig, timeout: Duration) -> Self {
         Self { backend, vm_config, timeout }
     }
 
@@ -77,10 +77,7 @@ impl<B: VmmBackend> BlockRunner<B> {
             "starting block execution"
         );
 
-        let output = self
-            .backend
-            .execute_command(&self.vm_config, &command, self.timeout)
-            .await?;
+        let output = self.backend.execute_command(&self.vm_config, &command, self.timeout).await?;
 
         let duration = wall_start.elapsed();
         let output_hash = compute_hash(&output.stdout, &output.stderr);
@@ -151,10 +148,7 @@ mod tests {
     fn compute_hash_includes_stderr() {
         let hash_no_stderr = compute_hash(b"out", b"");
         let hash_with_stderr = compute_hash(b"out", b"err");
-        assert_ne!(
-            hash_no_stderr, hash_with_stderr,
-            "stderr must affect the hash"
-        );
+        assert_ne!(hash_no_stderr, hash_with_stderr, "stderr must affect the hash");
     }
 
     #[test]

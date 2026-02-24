@@ -10,11 +10,17 @@ use uuid::Uuid;
 pub enum ExecutorError {
     /// Firecracker binary not found at the configured path.
     #[error("firecracker binary not found at {path}")]
-    BinaryNotFound { path: PathBuf },
+    BinaryNotFound {
+        /// The path where the binary was expected.
+        path: PathBuf,
+    },
 
     /// KVM device is not available or not accessible.
     #[error("KVM not available: {reason}")]
-    KvmUnavailable { reason: String },
+    KvmUnavailable {
+        /// The reason KVM is unavailable.
+        reason: String,
+    },
 
     /// VM failed to spawn.
     #[error("VM spawn failed: {0}")]
@@ -22,11 +28,21 @@ pub enum ExecutorError {
 
     /// Snapshot operation failed.
     #[error("snapshot failed for VM {vm_id}: {reason}")]
-    SnapshotFailed { vm_id: Uuid, reason: String },
+    SnapshotFailed {
+        /// The ID of the VM that failed to snapshot.
+        vm_id: Uuid,
+        /// The reason the snapshot failed.
+        reason: String,
+    },
 
     /// Restore from snapshot failed.
     #[error("restore failed for snapshot {snapshot_id}: {reason}")]
-    RestoreFailed { snapshot_id: Uuid, reason: String },
+    RestoreFailed {
+        /// The ID of the snapshot that failed to restore.
+        snapshot_id: Uuid,
+        /// The reason the restore failed.
+        reason: String,
+    },
 
     /// Firecracker API request failed.
     #[error("API request failed: {0}")]

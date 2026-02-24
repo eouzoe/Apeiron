@@ -5,9 +5,6 @@
 //!
 //! See `docs/ARCHITECTURE.md` §4 for design rationale.
 
-#![warn(clippy::pedantic)]
-#![deny(clippy::unwrap_used)]
-
 pub mod error;
 pub mod pool;
 pub mod routes;

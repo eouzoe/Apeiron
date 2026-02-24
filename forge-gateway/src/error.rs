@@ -28,9 +28,9 @@ pub enum GatewayError {
 impl IntoResponse for GatewayError {
     fn into_response(self) -> Response {
         let status = match &self {
-            GatewayError::Executor(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            GatewayError::SandboxNotFound(_) => StatusCode::NOT_FOUND,
-            GatewayError::InvalidRequest(_) => StatusCode::BAD_REQUEST,
+            Self::Executor(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::SandboxNotFound(_) => StatusCode::NOT_FOUND,
+            Self::InvalidRequest(_) => StatusCode::BAD_REQUEST,
         };
         (status, Json(json!({"error": self.to_string()}))).into_response()
     }

@@ -68,7 +68,7 @@ impl TrustScore {
 
     /// Returns the inner `f64` value.
     #[must_use]
-    pub fn value(self) -> f64 {
+    pub const fn value(self) -> f64 {
         self.0
     }
 }

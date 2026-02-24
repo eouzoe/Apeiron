@@ -21,34 +21,48 @@ type Pool = Arc<SandboxPool>;
 
 // ── Request / response types ──────────────────────────────────────────────────
 
+/// Request body for `POST /v1/sandbox`.
 #[derive(Debug, Deserialize)]
 pub struct CreateSandboxBody {
+    /// The runtime to use (e.g. `"node"` or `"python"`).
     pub runtime: String,
 }
 
+/// Response body for `POST /v1/sandbox`.
 #[derive(Debug, Serialize)]
 pub struct CreateSandboxResponse {
+    /// The unique identifier of the created sandbox.
     pub id: Uuid,
 }
 
+/// Request body for `POST /v1/sandbox/:id/shell`.
 #[derive(Debug, Deserialize)]
 pub struct ShellBody {
+    /// The shell command to execute.
     pub command: String,
 }
 
+/// Request body for `POST /v1/sandbox/:id/execute`.
 #[derive(Debug, Deserialize)]
 pub struct ExecuteBody {
+    /// The source code to execute.
     pub code: String,
+    /// The runtime to use (e.g. `"node"` or `"python"`).
     pub runtime: String,
 }
 
 /// Result returned by both `/shell` and `/execute` endpoints.
 #[derive(Debug, Serialize)]
 pub struct ShellResult {
+    /// Whether the command exited with code 0.
     pub success: bool,
+    /// Standard output from the command.
     pub stdout: String,
+    /// Standard error from the command.
     pub stderr: String,
+    /// The exit code of the command.
     pub exit_code: i32,
+    /// Wall-clock execution time in milliseconds.
     pub execution_time_ms: u128,
 }
 
@@ -173,9 +187,7 @@ async fn run_code(runtime: &str, code: &str) -> Result<ShellResult, GatewayError
         "node" => ("node", "-e"),
         "python" => ("python3", "-c"),
         other => {
-            return Err(GatewayError::InvalidRequest(format!(
-                "unsupported runtime '{other}'"
-            )))
+            return Err(GatewayError::InvalidRequest(format!("unsupported runtime '{other}'")))
         }
     };
 

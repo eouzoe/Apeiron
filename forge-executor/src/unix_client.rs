@@ -21,15 +21,15 @@ use crate::ExecutorError;
 ///
 /// # Errors
 /// Returns [`ExecutorError::ApiError`] on HTTP or connection errors.
-pub(crate) async fn api_request(
+pub async fn api_request(
     socket_path: &Path,
     method: Method,
     uri_path: &str,
     body: Option<String>,
 ) -> Result<String, ExecutorError> {
-    let stream = UnixStream::connect(socket_path)
-        .await
-        .map_err(|e| ExecutorError::ApiError(format!("connect to {}: {e}", socket_path.display())))?;
+    let stream = UnixStream::connect(socket_path).await.map_err(|e| {
+        ExecutorError::ApiError(format!("connect to {}: {e}", socket_path.display()))
+    })?;
 
     let io = TokioIo::new(stream);
 
@@ -51,10 +51,7 @@ pub(crate) async fn api_request(
         .parse()
         .map_err(|e| ExecutorError::ApiError(format!("invalid URI path {uri_path}: {e}")))?;
 
-    let mut builder = Request::builder()
-        .method(method)
-        .uri(uri)
-        .header("Host", "localhost");
+    let mut builder = Request::builder().method(method).uri(uri).header("Host", "localhost");
 
     if content_len > 0 {
         builder = builder.header("Content-Type", "application/json");
@@ -81,9 +78,7 @@ pub(crate) async fn api_request(
     let body_str = String::from_utf8_lossy(&body_bytes).into_owned();
 
     if !status.is_success() {
-        return Err(ExecutorError::ApiError(format!(
-            "HTTP {status} from {uri_path}: {body_str}"
-        )));
+        return Err(ExecutorError::ApiError(format!("HTTP {status} from {uri_path}: {body_str}")));
     }
 
     Ok(body_str)

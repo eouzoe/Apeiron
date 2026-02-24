@@ -45,12 +45,8 @@ impl FirecrackerBackend {
     /// - `socket_dir`: directory for Unix socket files (must be writable)
     /// - `snapshot_dir`: directory for snapshot state files (must be writable)
     #[must_use]
-    pub fn new(binary_path: PathBuf, socket_dir: PathBuf, snapshot_dir: PathBuf) -> Self {
-        Self {
-            binary_path,
-            socket_dir,
-            snapshot_dir,
-        }
+    pub const fn new(binary_path: PathBuf, socket_dir: PathBuf, snapshot_dir: PathBuf) -> Self {
+        Self { binary_path, socket_dir, snapshot_dir }
     }
 
     /// Create a backend using system defaults.
@@ -102,13 +98,8 @@ impl FirecrackerBackend {
             "kernel_image_path": config.kernel_path,
             "boot_args": config.boot_args,
         });
-        api_request(
-            socket_path,
-            Method::PUT,
-            "/boot-source",
-            Some(kernel_body.to_string()),
-        )
-        .await?;
+        api_request(socket_path, Method::PUT, "/boot-source", Some(kernel_body.to_string()))
+            .await?;
 
         // Set rootfs
         let rootfs_body = serde_json::json!({
@@ -117,36 +108,20 @@ impl FirecrackerBackend {
             "is_root_device": true,
             "is_read_only": false,
         });
-        api_request(
-            socket_path,
-            Method::PUT,
-            "/drives/rootfs",
-            Some(rootfs_body.to_string()),
-        )
-        .await?;
+        api_request(socket_path, Method::PUT, "/drives/rootfs", Some(rootfs_body.to_string()))
+            .await?;
 
         // Set machine config
         let machine_body = serde_json::json!({
             "vcpu_count": config.vcpu_count,
             "mem_size_mib": config.mem_size_mib,
         });
-        api_request(
-            socket_path,
-            Method::PUT,
-            "/machine-config",
-            Some(machine_body.to_string()),
-        )
-        .await?;
+        api_request(socket_path, Method::PUT, "/machine-config", Some(machine_body.to_string()))
+            .await?;
 
         // Boot
         let boot_body = serde_json::json!({ "action_type": "InstanceStart" });
-        api_request(
-            socket_path,
-            Method::PUT,
-            "/actions",
-            Some(boot_body.to_string()),
-        )
-        .await?;
+        api_request(socket_path, Method::PUT, "/actions", Some(boot_body.to_string())).await?;
 
         Ok(())
     }
@@ -157,9 +132,7 @@ impl VmmBackend for FirecrackerBackend {
     async fn spawn(&self, config: &VmConfig) -> Result<VmHandle, ExecutorError> {
         // Verify KVM is accessible
         if !Path::new("/dev/kvm").exists() {
-            return Err(ExecutorError::KvmUnavailable {
-                reason: "/dev/kvm not found".to_owned(),
-            });
+            return Err(ExecutorError::KvmUnavailable { reason: "/dev/kvm not found".to_owned() });
         }
 
         // Verify binary exists
@@ -212,17 +185,12 @@ impl VmmBackend for FirecrackerBackend {
 
         // Firecracker requires the VM to be paused before snapshotting.
         let pause_body = serde_json::json!({ "state": "Paused" });
-        api_request(
-            &handle.socket_path,
-            Method::PATCH,
-            "/vm",
-            Some(pause_body.to_string()),
-        )
-        .await
-        .map_err(|e| ExecutorError::SnapshotFailed {
-            vm_id: handle.id,
-            reason: format!("pause failed: {e}"),
-        })?;
+        api_request(&handle.socket_path, Method::PATCH, "/vm", Some(pause_body.to_string()))
+            .await
+            .map_err(|e| ExecutorError::SnapshotFailed {
+                vm_id: handle.id,
+                reason: format!("pause failed: {e}"),
+            })?;
 
         let body = serde_json::json!({
             "snapshot_type": "Full",
@@ -240,13 +208,9 @@ impl VmmBackend for FirecrackerBackend {
 
         // Always attempt to resume, even if snapshot failed.
         let resume_body = serde_json::json!({ "state": "Resumed" });
-        let _ = api_request(
-            &handle.socket_path,
-            Method::PATCH,
-            "/vm",
-            Some(resume_body.to_string()),
-        )
-        .await;
+        let _ =
+            api_request(&handle.socket_path, Method::PATCH, "/vm", Some(resume_body.to_string()))
+                .await;
 
         result.map_err(|e| ExecutorError::SnapshotFailed {
             vm_id: handle.id,
@@ -290,12 +254,10 @@ impl VmmBackend for FirecrackerBackend {
                 reason: format!("exec firecracker: {e}"),
             })?;
 
-        Self::wait_for_socket(&socket_path)
-            .await
-            .map_err(|e| ExecutorError::RestoreFailed {
-                snapshot_id: snapshot_id.0,
-                reason: e.to_string(),
-            })?;
+        Self::wait_for_socket(&socket_path).await.map_err(|e| ExecutorError::RestoreFailed {
+            snapshot_id: snapshot_id.0,
+            reason: e.to_string(),
+        })?;
 
         let body = serde_json::json!({
             "snapshot_path": state_path,
@@ -307,17 +269,12 @@ impl VmmBackend for FirecrackerBackend {
             "resume_vm": true,
         });
 
-        api_request(
-            &socket_path,
-            Method::PUT,
-            "/snapshot/load",
-            Some(body.to_string()),
-        )
-        .await
-        .map_err(|e| ExecutorError::RestoreFailed {
-            snapshot_id: snapshot_id.0,
-            reason: e.to_string(),
-        })?;
+        api_request(&socket_path, Method::PUT, "/snapshot/load", Some(body.to_string()))
+            .await
+            .map_err(|e| ExecutorError::RestoreFailed {
+                snapshot_id: snapshot_id.0,
+                reason: e.to_string(),
+            })?;
 
         tracing::info!(vm_id = %vm_id, "VM restored from snapshot");
 
@@ -338,9 +295,7 @@ impl VmmBackend for FirecrackerBackend {
     async fn health_check(&self) -> Result<(), ExecutorError> {
         // Check KVM
         if !Path::new("/dev/kvm").exists() {
-            return Err(ExecutorError::KvmUnavailable {
-                reason: "/dev/kvm not found".to_owned(),
-            });
+            return Err(ExecutorError::KvmUnavailable { reason: "/dev/kvm not found".to_owned() });
         }
 
         // Check KVM is readable
@@ -362,9 +317,7 @@ impl VmmBackend for FirecrackerBackend {
     ) -> Result<ExecutionOutput, ExecutorError> {
         // Verify KVM and binary are available.
         if !Path::new("/dev/kvm").exists() {
-            return Err(ExecutorError::KvmUnavailable {
-                reason: "/dev/kvm not found".to_owned(),
-            });
+            return Err(ExecutorError::KvmUnavailable { reason: "/dev/kvm not found".to_owned() });
         }
         which_binary(&self.binary_path)?;
 
@@ -517,16 +470,11 @@ fn extract_b64_section(raw: &[u8], start_marker: &[u8], end_marker: &[u8]) -> Op
 /// Returns `None` if the marker is absent or the value cannot be parsed.
 fn extract_exit_code(raw: &[u8]) -> Option<i32> {
     let marker = b"FORGE_EXIT:";
-    let value_start = raw
-        .windows(marker.len())
-        .position(|w| w == marker)
-        .map(|p| p + marker.len())?;
+    let value_start =
+        raw.windows(marker.len()).position(|w| w == marker).map(|p| p + marker.len())?;
 
     let rest = &raw[value_start..];
-    let value_end = rest
-        .iter()
-        .position(|&b| b == b'\r' || b == b'\n')
-        .unwrap_or(rest.len());
+    let value_end = rest.iter().position(|&b| b == b'\r' || b == b'\n').unwrap_or(rest.len());
 
     std::str::from_utf8(&rest[..value_end]).ok()?.trim().parse().ok()
 }

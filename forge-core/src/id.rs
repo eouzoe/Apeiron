@@ -17,7 +17,7 @@ impl BlockId {
 
     /// Returns the inner `Uuid`.
     #[must_use]
-    pub fn as_uuid(&self) -> Uuid {
+    pub const fn as_uuid(&self) -> Uuid {
         self.0
     }
 }
@@ -172,13 +172,13 @@ pub struct ContentHash(pub [u8; 32]);
 impl ContentHash {
     /// Creates a `ContentHash` from a raw 32-byte array.
     #[must_use]
-    pub fn new(bytes: [u8; 32]) -> Self {
+    pub const fn new(bytes: [u8; 32]) -> Self {
         Self(bytes)
     }
 
     /// Returns the raw bytes.
     #[must_use]
-    pub fn as_bytes(&self) -> &[u8; 32] {
+    pub const fn as_bytes(&self) -> &[u8; 32] {
         &self.0
     }
 }

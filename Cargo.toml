@@ -12,7 +12,7 @@ resolver = "2"
 edition = "2021"
 version = "0.1.0"
 license = "MIT OR Apache-2.0"
-rust-version = "1.82"
+rust-version = "1.85"
 
 [workspace.dependencies]
 # forge crates
@@ -50,6 +50,7 @@ proptest = "1"
 opt-level = 3
 lto = "thin"
 codegen-units = 1
+overflow-checks = true
 
 [workspace.lints.rust]
 future_incompatible = { level = "deny", priority = -1 }
